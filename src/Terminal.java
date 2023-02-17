@@ -6,7 +6,7 @@ public class Terminal {
         for (var letter: output.toCharArray()) {
             System.out.print(letter);
             try {
-                Thread.sleep(50);
+                Thread.sleep(25);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

@@ -1,3 +1,4 @@
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -76,6 +77,67 @@ public class Game {
                 .stream()
                 .filter(hero -> hero.getRawName().equals("Knight"))
                 .findFirst();
+    }
+
+    private Optional<Hero> getHeroAt(int[] position) {
+        return heroes
+                .stream()
+                .filter(hero -> Arrays.equals(hero.getPosition(), position))
+                .findFirst();
+    }
+
+    private boolean isValidPosition(int[] position) {
+        var row = position[0];
+        var col = position[1];
+        return row >= 0 && col >= 0 && row < height && col < width;
+    }
+
+    private String getPossibleStepDescriptionTo(int[] position) {
+        if (!isValidPosition(position)) {
+            return "Unavailable";
+        }
+
+        var enemy = getHeroAt(position);
+        if (enemy.isPresent()) {
+            return "Fight enemy " + enemy.get();
+        }
+
+        if (dungeon[position[0]][position[1]]) {
+            return "Destroy wall";
+        }
+
+        return "Move";
+    }
+
+    private void printAvailableStepsForKnight() {
+        var knight = getKnight();
+        if (knight.isEmpty()) {
+            System.out.println("Knight is dead!");
+            return;
+        }
+        var knightPos = knight.get().getPosition();
+
+        var moves = new int[][] { {-1, 0}, {0, -1}, {1, 0}, {0, 1} };
+        var keys = new String[] { "W (up)", "A (left)", "S (down)", "D (right)" };
+
+        System.out.println("Select a move: ");
+        for (var i = 0; i < 4; i++) {
+            var move = moves[i];
+            var key = keys[i];
+            var movePos = new int[] { move[0] + knightPos[0], move[1] + knightPos[1] };
+            if (!isValidPosition(movePos)) continue;
+
+            System.out.println(AnsiColors.CYAN + (i + 1) + ") " + AnsiColors.RESET +
+                    AnsiColors.GREEN_BACKGROUND + key + AnsiColors.RESET + " -> " +
+                    AnsiColors.RESET + getPossibleStepDescriptionTo(movePos));
+        }
+    }
+
+
+
+    public void nextStep() {
+        printAvailableStepsForKnight();
+
     }
 
 }

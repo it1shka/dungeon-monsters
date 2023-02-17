@@ -3,6 +3,7 @@ import java.util.Scanner;
 public class Main {
 
     public static void main(String[] args) {
+        Terminal.clear();
         var scanner = new Scanner(System.in);
         System.out.print(AnsiColors.YELLOW_BACKGROUND + "Rows:" + AnsiColors.RESET + " ");
         var rows = scanner.nextInt();
@@ -16,6 +17,7 @@ public class Main {
         game.start();
         game.printRules();
         game.printDungeon();
+        game.nextStep();
     }
 
 }
