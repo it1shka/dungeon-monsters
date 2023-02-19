@@ -60,16 +60,18 @@ public class Game {
     }
 
     public void printRules() {
-        Terminal.typeAndWait("Hello, " + AnsiColors.CYAN_BACKGROUND + "stranger!" + AnsiColors.RESET);
-        Terminal.typeAndWait("Now you are entering a " +
-                AnsiColors.PURPLE_BACKGROUND + "mysterious dungeon" + AnsiColors.RESET +
-                " with " + AnsiColors.RED_BACKGROUND + (heroesAmount - 1) + " " + "dangerous monsters" + AnsiColors.RESET + " inside!");
-        Terminal.typeAndWait("Be careful or they will simply " + AnsiColors.RED_BACKGROUND + "eat" + AnsiColors.RESET + " you!");
         Terminal.clear();
-        Terminal.typeAndWait("Now, you will see your character: ");
-        Terminal.typeAndWait(getKnight().get().toString());
-        Terminal.typeAndWait("So, lets begin the battle! " + AnsiColors.RED_BACKGROUND + "Kill them all!" + AnsiColors.RESET);
-        Terminal.clear();
+        Terminal.typewritePage(
+                "Hello, " + AnsiColors.CYAN_BACKGROUND + "stranger!" + AnsiColors.RESET +
+                "Now you are entering a " + AnsiColors.PURPLE_BACKGROUND + "mysterious dungeon" + AnsiColors.RESET +
+                " with " + AnsiColors.RED_BACKGROUND + (heroesAmount - 1) + " " + "dangerous monsters" + AnsiColors.RESET + " inside!" +
+                "Be careful or they will simply " + AnsiColors.RED_BACKGROUND + "eat" + AnsiColors.RESET + " you!"
+        );
+        Terminal.typewritePage(
+                "This is your character: " + getKnight().get() +
+                " To win the battle, you have to kill all the " + AnsiColors.RED + "monsters" + AnsiColors.RESET + "." +
+                "Now, lets begin the " + AnsiColors.CYAN + "battle" + AnsiColors.RESET
+        );
     }
 
     private Optional<Hero> getKnight() {
@@ -133,7 +135,9 @@ public class Game {
         }
     }
 
+    private void makeMoveBasedOnInput() {
 
+    }
 
     public void nextStep() {
         printAvailableStepsForKnight();

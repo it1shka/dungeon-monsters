@@ -8,10 +8,10 @@ public class HeroGenerator {
     private static final Random random = new Random();
 
     private final static String[][] enemyTypes = new String[][] {
-            {AnsiColors.CYAN, "Wizard"},
-            {AnsiColors.GREEN, "Gnome"},
+            {AnsiColors.CYAN, "Skeleton"},
+            {AnsiColors.GREEN, "Zombie"},
             {AnsiColors.PURPLE, "Minion"},
-            {AnsiColors.YELLOW, "Goblin"}
+            {AnsiColors.YELLOW, "Goblin"},
     };
 
     private static final int MAX_ENEMY_HEALTH = 10;
