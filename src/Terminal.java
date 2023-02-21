@@ -29,6 +29,10 @@ public class Terminal {
         }
     }
 
+    public int getInteger(String prompt, int min) {
+        return Math.max(getInteger(prompt), min);
+    }
+
     public char getMove() {
         System.out.print("Enter your move (WASD): ");
         String input;
@@ -38,13 +42,22 @@ public class Terminal {
                 System.out.print("Please, provide your move (WASD): ");
                 continue;
             }
-            var maybeInput = input.charAt(0);
+            var maybeInput = Character.toUpperCase(input.charAt(0));
             if ("WASD".indexOf(maybeInput) == -1) {
                 System.out.print("Unrecognized move '" + maybeInput + "'. Please, choose from (WASD): ");
                 continue;
             }
 
             return maybeInput;
+        }
+    }
+
+    public boolean promptForReplay() {
+        while (true) {
+            System.out.print("Play again? [y/n]: ");
+            var input = scanner.nextLine().toLowerCase();
+            if (input.equals("y") || input.equals("yes")) return true;
+            if (input.equals("n") || input.equals("no")) return false;
         }
     }
 
@@ -56,6 +69,7 @@ public class Terminal {
     }
 
     public static void typewritePage(String output) {
+        Terminal.clear();
         var waitingForInput = new Thread(Terminal::readAndClear);
         waitingForInput.start();
 

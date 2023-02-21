@@ -5,7 +5,8 @@ import java.util.Optional;
 public class Game {
 
     private final int heroesAmount;
-    private List<Hero> heroes;
+    private List<Hero> enemies;
+    private Hero knight;
 
     private final int height;
     private final int width;
@@ -19,10 +20,16 @@ public class Game {
 
     public void start() {
         dungeon = DungeonGenerator.createDungeon(height, width, 5, 6, 3);
-        heroes = HeroGenerator.generateHeroes(dungeon, heroesAmount);
+        var heroes = HeroGenerator.generateHeroes(dungeon, heroesAmount);
+        for (var i = 0; i < heroesAmount; i++) {
+            if (heroes.get(i).getRawName().equals("Knight")) {
+                knight = heroes.remove(i);
+            }
+        }
+        enemies = heroes;
     }
 
-    public void printDungeon() {
+    private void printDungeon() {
         var display = new String[height + 2][width + 2];
 
         // drawing border
@@ -43,11 +50,16 @@ public class Game {
         }
 
         // placing heroes on the canvas
-        for (var hero: heroes) {
+        for (var hero: enemies) {
             var position = hero.getPosition();
             var row = position[0] + 1;
             var col = position[1] + 1;
             display[row][col] = hero.getShortLabel();
+        }
+
+        if (knight != null) {
+            var position = knight.getPosition();
+            display[position[0] + 1][position[1] + 1] = knight.getShortLabel();
         }
 
         for (var i = 0; i < height + 2; i++) {
@@ -59,30 +71,26 @@ public class Game {
         }
     }
 
+    private void printStats() {
+        System.out.println("Your stats: " + knight);
+    }
+
     public void printRules() {
-        Terminal.clear();
         Terminal.typewritePage(
                 "Hello, " + AnsiColors.CYAN_BACKGROUND + "stranger!" + AnsiColors.RESET +
-                "Now you are entering a " + AnsiColors.PURPLE_BACKGROUND + "mysterious dungeon" + AnsiColors.RESET +
-                " with " + AnsiColors.RED_BACKGROUND + (heroesAmount - 1) + " " + "dangerous monsters" + AnsiColors.RESET + " inside!" +
+                " Now you are entering a " + AnsiColors.PURPLE_BACKGROUND + "mysterious dungeon" + AnsiColors.RESET +
+                " with " + AnsiColors.RED_BACKGROUND + (heroesAmount - 1) + " " + "dangerous monsters" + AnsiColors.RESET + " inside! " +
                 "Be careful or they will simply " + AnsiColors.RED_BACKGROUND + "eat" + AnsiColors.RESET + " you!"
         );
         Terminal.typewritePage(
-                "This is your character: " + getKnight().get() +
-                " To win the battle, you have to kill all the " + AnsiColors.RED + "monsters" + AnsiColors.RESET + "." +
-                "Now, lets begin the " + AnsiColors.CYAN + "battle" + AnsiColors.RESET
+                "This is your character: " + (knight != null ? knight : "dead knight") +
+                ". To win the battle, you have to kill all the " + AnsiColors.RED + "monsters" + AnsiColors.RESET + ". " +
+                "Now, let's begin the " + AnsiColors.CYAN + "battle" + AnsiColors.RESET + "!"
         );
     }
 
-    private Optional<Hero> getKnight() {
-        return heroes
-                .stream()
-                .filter(hero -> hero.getRawName().equals("Knight"))
-                .findFirst();
-    }
-
-    private Optional<Hero> getHeroAt(int[] position) {
-        return heroes
+    private Optional<Hero> getEnemyAt(int[] position) {
+        return enemies
                 .stream()
                 .filter(hero -> Arrays.equals(hero.getPosition(), position))
                 .findFirst();
@@ -99,7 +107,7 @@ public class Game {
             return "Unavailable";
         }
 
-        var enemy = getHeroAt(position);
+        var enemy = getEnemyAt(position);
         if (enemy.isPresent()) {
             return "Fight enemy " + enemy.get();
         }
@@ -112,13 +120,7 @@ public class Game {
     }
 
     private void printAvailableStepsForKnight() {
-        var knight = getKnight();
-        if (knight.isEmpty()) {
-            System.out.println("Knight is dead!");
-            return;
-        }
-        var knightPos = knight.get().getPosition();
-
+        var knightPos = knight.getPosition();
         var moves = new int[][] { {-1, 0}, {0, -1}, {1, 0}, {0, 1} };
         var keys = new String[] { "W (up)", "A (left)", "S (down)", "D (right)" };
 
@@ -135,13 +137,77 @@ public class Game {
         }
     }
 
-    private void makeMoveBasedOnInput() {
+    private int[] getMovePosition() {
+        var input = Terminal.get().getMove();
+        var offset = switch (input) {
+            case 'W' -> new int[] { -1,  0 };
+            case 'A' -> new int[] {  0, -1 };
+            case 'S' -> new int[] {  1,  0 };
+            case 'D' -> new int[] {  0,  1 };
+            default -> new int[] {0, 0};
+        };
+        var pos = knight.getPosition();
+        return new int[] {pos[0] + offset[0], pos[1] + offset[1]};
+    }
 
+    private void makeMoveBasedOnInput() {
+        var movePos = getMovePosition();
+        if (!isValidPosition(movePos)) {
+            Terminal.typewritePage("Knight bumped into the " + AnsiColors.RED + "wall" + AnsiColors.RESET + "!");
+            return;
+        }
+        var maybeEnemy = getEnemyAt(movePos);
+        if (maybeEnemy.isPresent()) {
+            var enemy = maybeEnemy.get();
+            var damage = knight.getDamage();
+            enemy.takeDamage(damage);
+            var name = enemy.getColoredName();
+            if (enemy.isDead()) {
+                enemies.remove(enemy);
+            }
+            if (enemiesAreDefeated()) {
+                Terminal.typewritePage(AnsiColors.YELLOW + "ALL ENEMIES ARE DEFEATED! YOU WON!" + AnsiColors.RESET);
+            }
+            return;
+        }
+        var row = movePos[0];
+        var col = movePos[1];
+        if (dungeon[row][col]) {
+            dungeon[row][col] = false;
+            Terminal.typewritePage("You destroyed the " + AnsiColors.RED + "wall" + AnsiColors.RESET + "!");
+            return;
+        }
+        knight.setPosition(movePos);
+        Terminal.typewritePage("Knight moved to the next position.");
+    }
+
+    private void moveEnemies() {
+        if (enemiesAreDefeated()) return;
+        Terminal.typewritePage("Now, it is " + AnsiColors.RED + "enemies" + AnsiColors.RESET + " turn.");
+    }
+
+    public boolean knightIsDead() {
+        return knight == null || knight.isDead();
+    }
+
+    public boolean enemiesAreDefeated() {
+        return enemies.size() == 0;
     }
 
     public void nextStep() {
+        printDungeon();
+        if (knightIsDead()) {
+            System.out.println("Knight is dead! " + AnsiColors.RED + "Game over!" + AnsiColors.RESET);
+            return;
+        }
+        if (enemiesAreDefeated()) {
+            System.out.println("Enemies are defeated! " + AnsiColors.GREEN + "You won!" + AnsiColors.RESET);
+            return;
+        }
+        printStats();
         printAvailableStepsForKnight();
-
+        makeMoveBasedOnInput();
+        moveEnemies();
     }
 
 }
