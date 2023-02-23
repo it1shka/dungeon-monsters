@@ -202,10 +202,27 @@ public class Game {
         Terminal.typewritePage("Knight moved to the next position.");
     }
 
+    private static final int moveDelay = 500;
     private void moveEnemies() {
         if (enemiesAreDefeated()) return;
         Terminal.typewritePage("Now, it is " + AnsiColors.RED + "the enemies'" + AnsiColors.RESET + " turn.");
-        enemies.forEach(this::moveEnemy);
+        enemies.forEach(enemy -> {
+            if (knight.isDead()) return;
+            try {
+                enemy.makeColorBackground();
+                Terminal.clear();
+                printDungeon();
+                Thread.sleep(moveDelay);
+                moveEnemy(enemy);
+                Terminal.clear();
+                printDungeon();
+                enemy.makeColorForeground();
+                Thread.sleep(moveDelay);
+                Terminal.clear();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
     }
 
     private final static int[][] deltas = new int[][] { {0, 1}, {1, 0}, {0, -1}, {-1, 0} };
@@ -260,13 +277,13 @@ public class Game {
 
     private static final int searchDistance = 10;
     private void moveEnemy(Hero enemy) {
-        if (knight.isDead()) return;
-
         var path = getPathTo(enemy.getPosition(), knight.getPosition());
         if (path.size() == 0 || path.size() > searchDistance) {
             var available = getPositionsAround(enemy.getPosition());
-            var index = random.nextInt(available.size());
-            enemy.setPosition(available.get(index));
+            if (available.size() > 0) {
+                var index = random.nextInt(available.size());
+                enemy.setPosition(available.get(index));
+            }
             return;
         }
         if (path.size() == 1) {

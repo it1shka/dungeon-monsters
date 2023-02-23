@@ -3,7 +3,7 @@ import java.util.Random;
 public class Hero {
 
     private final String name;
-    private final String color;
+    private String color;
 
     private int health;
     private int damage;
@@ -27,6 +27,14 @@ public class Hero {
         this.luck = luck;
         level = health + damage + luck / 10;
         this.position = position;
+    }
+
+    public void makeColorBackground() {
+        color = AnsiColors.getBackgroundOf(color);
+    }
+
+    public void makeColorForeground() {
+        color = AnsiColors.getForegroundOf(color);
     }
 
     private boolean isLucky() {
