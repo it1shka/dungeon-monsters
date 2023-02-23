@@ -1,6 +1,4 @@
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class Game {
 
@@ -11,11 +9,13 @@ public class Game {
     private final int height;
     private final int width;
     private boolean[][] dungeon;
+    private final Random random;
 
     public Game(int rows, int columns, int heroes) {
         height = rows;
         width = columns;
         heroesAmount = heroes;
+        random = new Random();
     }
 
     public void start() {
@@ -161,7 +161,6 @@ public class Game {
             var enemy = maybeEnemy.get();
             var damage = knight.getDamage();
             enemy.takeDamage(damage);
-            var name = enemy.getColoredName();
             if (enemy.isDead()) {
                 enemies.remove(enemy);
             }
@@ -183,7 +182,78 @@ public class Game {
 
     private void moveEnemies() {
         if (enemiesAreDefeated()) return;
-        Terminal.typewritePage("Now, it is " + AnsiColors.RED + "enemies" + AnsiColors.RESET + " turn.");
+        Terminal.typewritePage("Now, it is " + AnsiColors.RED + "the enemies'" + AnsiColors.RESET + " turn.");
+        enemies.forEach(this::moveEnemy);
+    }
+
+    private final static int[][] deltas = new int[][] { {0, 1}, {1, 0}, {0, -1}, {-1, 0} };
+
+    private List<int[]> getPathTo(int[] startPoint, int[] endpoint) {
+        var unavailable = new boolean[height][width];
+        for (var enemy: enemies) {
+            var pos = enemy.getPosition();
+            unavailable[pos[0]][pos[1]] = true;
+        }
+        unavailable[startPoint[0]][startPoint[1]] = true;
+        var tracker = new int[height][width][];
+        var queue = new LinkedList<int[]>();
+        queue.add(startPoint);
+        while (!queue.isEmpty()) {
+            var current = queue.pop();
+            if (Arrays.equals(current, endpoint)) {
+                break;
+            }
+            for (var pos: deltas ) {
+                var movePos = new int[] { pos[0] + current[0], pos[1] + current[1] };
+                if (!isValidPosition(movePos)) continue;
+                var row = movePos[0];
+                var col = movePos[1];
+                if (unavailable[row][col] || dungeon[row][col]) continue;
+                unavailable[row][col] = true;
+                tracker[row][col] = current;
+                queue.add(movePos);
+            }
+        }
+
+        var path = new LinkedList<int[]>();
+        var current = endpoint;
+        while (tracker[current[0]][current[1]] != null) {
+            path.addFirst(current);
+            current = tracker[current[0]][current[1]];
+        }
+
+        return path;
+    }
+
+    private List<int[]> getPositionsAround(int[] position) {
+        var list = new LinkedList<int[]>();
+        for (var delta: deltas) {
+            var move = new int[] {position[0] + delta[0], position[1] + delta[1]};
+            if (!isValidPosition(move)) continue;
+            if (getEnemyAt(move).isPresent() || dungeon[move[0]][move[1]]) continue;
+            list.add(move);
+        }
+        return list;
+    }
+
+    private static final int searchDistance = 10;
+    private void moveEnemy(Hero enemy) {
+        var path = getPathTo(enemy.getPosition(), knight.getPosition());
+        if (path.size() == 0 || path.size() > searchDistance) {
+            var available = getPositionsAround(enemy.getPosition());
+            var index = random.nextInt(available.size());
+            enemy.setPosition(available.get(index));
+            return;
+        }
+        if (path.size() == 1) {
+            var damage = enemy.getDamage();
+            knight.takeDamage(damage);
+            if (knight.isDead()) {
+                Terminal.typewritePage("Knight is dead! " + AnsiColors.RED + "GAME OVER!" + AnsiColors.RESET);
+            }
+            return;
+        }
+        enemy.setPosition(path.get(0));
     }
 
     public boolean knightIsDead() {
