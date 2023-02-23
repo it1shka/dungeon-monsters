@@ -61,6 +61,17 @@ public class Terminal {
         }
     }
 
+    public int getEnhanceInput() {
+        System.out.print("Select level up: ");
+        while (true) {
+            var input = scanner.nextLine();
+            if (input.length() == 1 && "123".contains(input)) {
+                return Integer.parseInt(input);
+            }
+            System.out.print("Please, try again. Select level up: ");
+        }
+    }
+
     private static void readAndClear() {
         try {
             System.in.read();

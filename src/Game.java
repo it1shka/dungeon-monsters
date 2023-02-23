@@ -150,6 +150,27 @@ public class Game {
         return new int[] {pos[0] + offset[0], pos[1] + offset[1]};
     }
 
+    private void enhanceKnight(Hero killedEnemy) {
+        var lvl = killedEnemy.getLevel();
+        var hp = Math.max(1, lvl / 4);
+        var dmg = Math.max(1, lvl / 4);
+        var luck = Math.max(1, lvl / 5) * 10;
+
+        System.out.println(AnsiColors.GREEN + "Available level ups: " + AnsiColors.RESET);
+        System.out.println("1. " + AnsiColors.GREEN + "+" + hp + AnsiColors.RESET + " health points");
+        System.out.println("2. " + AnsiColors.RED + "+" + dmg + AnsiColors.RESET + " damage");
+        System.out.println("3. " + AnsiColors.PURPLE + "+" + luck + AnsiColors.RESET + " luck");
+
+        var pick = Terminal.get().getEnhanceInput();
+        switch (pick) {
+            case 1 -> knight.heal(hp);
+            case 2 -> knight.upgradeDamage(dmg);
+            case 3 -> knight.upgradeLuck(luck);
+        }
+
+        Terminal.clear();
+    }
+
     private void makeMoveBasedOnInput() {
         var movePos = getMovePosition();
         if (!isValidPosition(movePos)) {
@@ -163,6 +184,7 @@ public class Game {
             enemy.takeDamage(damage);
             if (enemy.isDead()) {
                 enemies.remove(enemy);
+                enhanceKnight(enemy);
             }
             if (enemiesAreDefeated()) {
                 Terminal.typewritePage(AnsiColors.YELLOW + "ALL ENEMIES ARE DEFEATED! YOU WON!" + AnsiColors.RESET);
@@ -238,6 +260,8 @@ public class Game {
 
     private static final int searchDistance = 10;
     private void moveEnemy(Hero enemy) {
+        if (knight.isDead()) return;
+
         var path = getPathTo(enemy.getPosition(), knight.getPosition());
         if (path.size() == 0 || path.size() > searchDistance) {
             var available = getPositionsAround(enemy.getPosition());

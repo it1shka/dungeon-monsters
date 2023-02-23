@@ -8,6 +8,7 @@ public class Hero {
     private int health;
     private int damage;
     private int luck;
+    private final int level;
     private final static int MAX_LUCK = 100;
 
     private int[] position;
@@ -24,6 +25,7 @@ public class Hero {
         this.health = health;
         this.damage = damage;
         this.luck = luck;
+        level = health + damage + luck / 10;
         this.position = position;
     }
 
@@ -83,12 +85,16 @@ public class Hero {
 
     public void heal(int delta) {
         health += delta;
-        Terminal.typewritePage(getColoredName() + " healed HP up to " + AnsiColors.GREEN + health + AnsiColors.RESET + "!");
+        Terminal.typewritePage(getColoredName() + " healed up to " + AnsiColors.GREEN + health + AnsiColors.RESET + "!");
     }
 
     public void move(int[] delta) {
         position[0] += delta[0];
         position[1] += delta[1];
+    }
+
+    public int getLevel() {
+        return level;
     }
 
     public int[] getPosition() {
@@ -102,7 +108,8 @@ public class Hero {
     @Override public String toString() {
         return getColoredName() + ", damage: " + AnsiColors.CYAN_BACKGROUND + damage + AnsiColors.RESET +
                 ", health: " + AnsiColors.CYAN_BACKGROUND + health + AnsiColors.RESET +
-                ", luck: " + AnsiColors.CYAN_BACKGROUND + luck + AnsiColors.RESET;
+                ", luck: " + AnsiColors.CYAN_BACKGROUND + luck + AnsiColors.RESET +
+                ", level: " + AnsiColors.PURPLE_BACKGROUND + level + AnsiColors.RESET;
     }
 
 }
